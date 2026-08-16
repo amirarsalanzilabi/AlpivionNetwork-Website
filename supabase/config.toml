@@ -1,0 +1,10 @@
+project_id = "tquhcxmevswdvpibukyv"
+
+[functions.check-email-exists]
+verify_jwt = false
+
+[functions.cleanup-unverified-users]
+verify_jwt = false
+
+[functions.send-auth-email]
+verify_jwt = false
