@@ -69,120 +69,134 @@ const EventsCalendar = () => {
           <span className="text-primary text-sm font-semibold uppercase tracking-wider">Schedule</span>
           <h1 className="font-display text-4xl md:text-5xl font-bold text-foreground mt-3 mb-4">Events Calendar</h1>
           <p className="text-muted-foreground text-lg">
-            Every group flight, past and upcoming. Pick a date to see what's happening, or browse the full list.
+            Every group flight, past and upcoming. Browse the list below, or pick a date to narrow it down.
           </p>
         </div>
 
-        <div className="grid lg:grid-cols-[380px_1fr] gap-8 items-start max-w-5xl mx-auto">
-          {/* Calendar */}
-          <div className="glass-card rounded-xl p-4 lg:sticky lg:top-24">
-            <Calendar
-              mode="single"
-              selected={selectedDate}
-              onSelect={setSelectedDate}
-              modifiers={{ hasFlight: flightDates }}
-              modifiersClassNames={{
-                hasFlight:
-                  "relative after:content-[''] after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:w-1 after:h-1 after:rounded-full after:bg-primary",
-              }}
-              className="mx-auto"
-            />
-            {selectedDate && (
-              <Button variant="ghost" size="sm" className="w-full mt-2 text-primary" onClick={() => setSelectedDate(undefined)}>
-                <X className="w-3.5 h-3.5 mr-1.5" />
-                Clear selection
-              </Button>
-            )}
-          </div>
+        <div className="max-w-3xl mx-auto space-y-4">
+          {selectedDate && (
+            <p className="text-sm text-muted-foreground">
+              Showing flights on{" "}
+              <span className="text-foreground font-medium">
+                {selectedDate.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
+              </span>
+            </p>
+          )}
 
-          {/* Flight list */}
-          <div className="space-y-4">
-            {selectedDate && (
-              <p className="text-sm text-muted-foreground">
-                Showing flights on{" "}
-                <span className="text-foreground font-medium">
-                  {selectedDate.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
-                </span>
-              </p>
-            )}
-
-            {loading ? (
-              <div className="flex items-center justify-center py-12">
-                <Loader2 className="w-8 h-8 animate-spin text-primary" />
-              </div>
-            ) : visibleFlights.length === 0 ? (
-              <p className="text-center text-muted-foreground py-12">
-                {selectedDate ? "No flights scheduled on this date." : "No flights scheduled yet — check back soon."}
-              </p>
-            ) : (
-              visibleFlights.map((flight) => (
-                <div key={flight.id} className="glass-card rounded-xl p-6 relative overflow-hidden">
-                  {flight.is_completed && (
-                    <div className="absolute left-[-40px] bottom-10 rotate-[35deg] bg-primary text-primary-foreground text-xs font-bold py-1 px-12 shadow-lg z-10 tracking-wide">
-                      COMPLETED
-                    </div>
-                  )}
-                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-                    <div>
-                      <h3 className="text-xl font-semibold text-foreground">{flight.title}</h3>
-                      <div className="flex items-center gap-2 mt-1 text-primary font-display text-lg">
-                        <MapPin className="w-4 h-4" />
-                        {flight.route}
-                      </div>
-                    </div>
-                    <span className={`text-xs px-2 py-1 rounded-full border shrink-0 ${difficultyColors[flight.difficulty]}`}>
-                      {flight.difficulty}
-                    </span>
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            </div>
+          ) : visibleFlights.length === 0 ? (
+            <p className="text-center text-muted-foreground py-12">
+              {selectedDate ? "No flights scheduled on this date." : "No flights scheduled yet — check back soon."}
+            </p>
+          ) : (
+            visibleFlights.map((flight) => (
+              <div key={flight.id} className="glass-card rounded-xl p-6 relative overflow-hidden">
+                {flight.is_completed && (
+                  <div className="absolute left-[-40px] bottom-10 rotate-[35deg] bg-primary text-primary-foreground text-xs font-bold py-1 px-12 shadow-lg z-10 tracking-wide">
+                    COMPLETED
                   </div>
-
-                  <div className="flex flex-wrap gap-x-6 gap-y-2 mt-4 text-muted-foreground">
-                    <div className="flex items-center gap-2">
-                      <CalendarIcon className="w-4 h-4 text-primary" />
-                      <span>{formatDate(flight.date)}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Clock className="w-4 h-4 text-primary" />
-                      <span>{flight.time}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Users className="w-4 h-4 text-primary" />
-                      <span>{flight.participant_count} pilots registered</span>
+                )}
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+                  <div>
+                    <h3 className="text-xl font-semibold text-foreground">{flight.title}</h3>
+                    <div className="flex items-center gap-2 mt-1 text-primary font-display text-lg">
+                      <MapPin className="w-4 h-4" />
+                      {flight.route}
                     </div>
                   </div>
+                  <span className={`text-xs px-2 py-1 rounded-full border shrink-0 ${difficultyColors[flight.difficulty]}`}>
+                    {flight.difficulty}
+                  </span>
+                </div>
 
-                  <div className="flex items-center justify-between mt-4 pt-4 border-t border-border">
-                    <div>
-                      <span className="text-sm text-muted-foreground">Aircraft: </span>
-                      <span className="text-sm text-foreground font-medium">{flight.aircraft}</span>
-                    </div>
-
-                    {flight.is_completed ? (
-                      <span className="text-sm text-muted-foreground">Flight completed</span>
-                    ) : isRegistered(flight.id) ? (
-                      <Button
-                        variant="heroOutline"
-                        size="sm"
-                        className="border-emerald-500/50 text-emerald-400 hover:bg-emerald-500/10"
-                        disabled
-                      >
-                        <Check className="w-4 h-4 mr-2" />
-                        Registered
-                      </Button>
-                    ) : (
-                      <Button
-                        variant="heroOutline"
-                        size="sm"
-                        onClick={() => handleRegister(flight.id)}
-                        disabled={registeringId === flight.id}
-                      >
-                        {registeringId === flight.id ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
-                        Register Now
-                      </Button>
-                    )}
+                <div className="flex flex-wrap gap-x-6 gap-y-2 mt-4 text-muted-foreground">
+                  <div className="flex items-center gap-2">
+                    <CalendarIcon className="w-4 h-4 text-primary" />
+                    <span>{formatDate(flight.date)}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Clock className="w-4 h-4 text-primary" />
+                    <span>{flight.time}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Users className="w-4 h-4 text-primary" />
+                    <span>{flight.participant_count} pilots registered</span>
                   </div>
                 </div>
-              ))
-            )}
+
+                <div className="flex items-center justify-between mt-4 pt-4 border-t border-border">
+                  <div>
+                    <span className="text-sm text-muted-foreground">Aircraft: </span>
+                    <span className="text-sm text-foreground font-medium">{flight.aircraft}</span>
+                  </div>
+
+                  {flight.is_completed ? (
+                    <span className="text-sm text-muted-foreground">Flight completed</span>
+                  ) : isRegistered(flight.id) ? (
+                    <Button
+                      variant="heroOutline"
+                      size="sm"
+                      className="border-emerald-500/50 text-emerald-400 hover:bg-emerald-500/10"
+                      disabled
+                    >
+                      <Check className="w-4 h-4 mr-2" />
+                      Registered
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="heroOutline"
+                      size="sm"
+                      onClick={() => handleRegister(flight.id)}
+                      disabled={registeringId === flight.id}
+                    >
+                      {registeringId === flight.id ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+                      Register Now
+                    </Button>
+                  )}
+                </div>
+              </div>
+            ))
+          )}
+
+          {/* Browse by date */}
+          <div className="pt-8">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="font-display text-lg font-semibold text-foreground">Browse by date</h2>
+              {selectedDate && (
+                <Button variant="ghost" size="sm" className="text-primary h-8" onClick={() => setSelectedDate(undefined)}>
+                  <X className="w-3.5 h-3.5 mr-1.5" />
+                  Clear
+                </Button>
+              )}
+            </div>
+            <div className="flex justify-center">
+              <Calendar
+                mode="single"
+                selected={selectedDate}
+                onSelect={setSelectedDate}
+                modifiers={{ hasFlight: flightDates }}
+                modifiersClassNames={{
+                  hasFlight:
+                    "relative after:content-[''] after:absolute after:bottom-1.5 after:left-1/2 after:-translate-x-1/2 after:w-1 after:h-1 after:rounded-full after:bg-primary",
+                }}
+                classNames={{
+                  months: "flex flex-col",
+                  caption_label: "text-base font-display font-semibold",
+                  nav_button:
+                    "h-8 w-8 bg-transparent p-0 rounded-full border-0 text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors",
+                  head_cell: "text-muted-foreground/70 rounded-md w-11 font-normal text-xs",
+                  cell: "h-11 w-11 text-center text-sm p-0 relative focus-within:relative focus-within:z-20",
+                  day: "h-11 w-11 p-0 font-normal rounded-full hover:bg-primary/10 transition-colors aria-selected:opacity-100",
+                  day_selected:
+                    "bg-primary text-primary-foreground font-semibold glow-amber hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
+                  day_today: "text-primary font-semibold ring-1 ring-primary/40",
+                }}
+                className="p-0"
+              />
+            </div>
           </div>
         </div>
       </main>
