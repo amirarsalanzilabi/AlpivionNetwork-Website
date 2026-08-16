@@ -13,7 +13,8 @@ import { useToast } from "@/hooks/use-toast";
 
 const Auth = () => {
   const [searchParams] = useSearchParams();
-  const defaultTab = searchParams.get("mode") === "signup" ? "signup" : "signin";
+  const modeParam = searchParams.get("mode");
+  const defaultTab = modeParam === "signup" ? "signup" : "signin";
   const [tab, setTab] = useState(defaultTab);
 
   const [signInEmail, setSignInEmail] = useState("");
@@ -34,6 +35,13 @@ const Auth = () => {
   useEffect(() => {
     if (user) navigate("/");
   }, [user, navigate]);
+
+  // Navbar's Sign In / Join Us links only change the ?mode= query param while
+  // already on this page, which doesn't remount the component — sync manually.
+  useEffect(() => {
+    setTab(modeParam === "signup" ? "signup" : "signin");
+    setSignedUp(false);
+  }, [modeParam]);
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
