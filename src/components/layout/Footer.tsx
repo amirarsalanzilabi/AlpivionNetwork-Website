@@ -1,28 +1,13 @@
 import { Plane } from "lucide-react";
-import { Link, useNavigate, useLocation } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 const Footer = () => {
-  const navigate = useNavigate();
-  const location = useLocation();
-
   const links = {
-    Community: ["Group Flights", "Events Calendar", "Discord Server"],
+    Community: ["Discord Server"],
     Resources: ["Knowledge Base", "Tutorials", "Flight Planning", "Route Database"],
     Support: ["FAQ", "Contact Us", "Guidelines"],
   };
 
-  const handleSectionClick = (sectionId: string) => {
-    if (location.pathname !== "/") {
-      navigate("/");
-      setTimeout(() => {
-        const element = document.querySelector(sectionId);
-        element?.scrollIntoView({ behavior: "smooth" });
-      }, 100);
-    } else {
-      const element = document.querySelector(sectionId);
-      element?.scrollIntoView({ behavior: "smooth" });
-    }
-  };
   return (
     <footer className="bg-card border-t border-border">
       <div className="container mx-auto px-4 py-16">
@@ -55,21 +40,6 @@ const Footer = () => {
                     {item === "FAQ" ? (
                       <Link
                         to="/faq"
-                        onClick={() => setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 50)}
-                        className="text-muted-foreground hover:text-primary transition-colors text-sm"
-                      >
-                        {item}
-                      </Link>
-                    ) : item === "Group Flights" ? (
-                      <button
-                        onClick={() => handleSectionClick("#flights")}
-                        className="text-muted-foreground hover:text-primary transition-colors text-sm text-left"
-                      >
-                        {item}
-                      </button>
-                    ) : item === "Events Calendar" ? (
-                      <Link
-                        to="/events"
                         onClick={() => setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 50)}
                         className="text-muted-foreground hover:text-primary transition-colors text-sm"
                       >

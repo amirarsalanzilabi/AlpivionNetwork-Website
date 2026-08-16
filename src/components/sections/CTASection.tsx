@@ -31,21 +31,14 @@ const CTASection = () => {
             virtual skies together.
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            {!user && (
+          {!user && (
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button variant="hero" size="xl" onClick={() => navigate("/auth?mode=signup")}>
                 Create Account
                 <ArrowRight className="w-5 h-5" />
               </Button>
-            )}
-            <Button
-              variant="heroOutline"
-              size="xl"
-              onClick={() => document.getElementById("flights")?.scrollIntoView({ behavior: "smooth" })}
-            >
-              Browse Flights
-            </Button>
-          </div>
+            </div>
+          )}
 
           {/* Trust badges */}
           <div className="mt-12 pt-12 border-t border-border/50">

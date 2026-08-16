@@ -41,9 +41,6 @@ const Navbar = () => {
     name: "Home",
     href: "#"
   }, {
-    name: "Group Flights",
-    href: "#flights"
-  }, {
     name: "Community",
     href: "#community"
   }];

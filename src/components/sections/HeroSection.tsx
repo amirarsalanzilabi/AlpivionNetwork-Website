@@ -43,11 +43,6 @@ const HeroSection = () => {
               Join Alpivion Network
               <ArrowRight className="w-5 h-5" />
             </Button>
-            <Button variant="heroOutline" size="xl" onClick={() => document.getElementById("flights")?.scrollIntoView({
-            behavior: "smooth"
-          })}>
-              View Upcoming Flights
-            </Button>
           </div>
 
           {/* Stats */}
