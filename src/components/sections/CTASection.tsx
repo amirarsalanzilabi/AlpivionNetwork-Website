@@ -1,9 +1,12 @@
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Plane } from "lucide-react";
-
-const DISCORD_URL = "https://discord.gg/Qs7cvhNngZ";
+import { useAuth } from "@/contexts/AuthContext";
 
 const CTASection = () => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+
   return (
     <section id="community" className="py-24 relative overflow-hidden">
       {/* Background decoration */}
@@ -29,12 +32,12 @@ const CTASection = () => {
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button variant="hero" size="xl" asChild>
-              <a href={DISCORD_URL} target="_blank" rel="noopener noreferrer">
+            {!user && (
+              <Button variant="hero" size="xl" onClick={() => navigate("/auth?mode=signup")}>
                 Create Account
                 <ArrowRight className="w-5 h-5" />
-              </a>
-            </Button>
+              </Button>
+            )}
             <Button
               variant="heroOutline"
               size="xl"

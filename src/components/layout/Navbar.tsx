@@ -1,14 +1,19 @@
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, X, Plane } from "lucide-react";
-
-const DISCORD_URL = "https://discord.gg/Qs7cvhNngZ";
+import { Menu, X, Plane, LogOut } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+
+  const handleSignOut = async () => {
+    await signOut();
+    setIsOpen(false);
+  };
 
   const handleNavClick = (href: string) => {
     setIsOpen(false);
@@ -80,11 +85,24 @@ const Navbar = () => {
 
           {/* CTA Button */}
           <div className="hidden md:flex items-center gap-4">
-            <Button variant="hero" size="sm" asChild>
-              <a href={DISCORD_URL} target="_blank" rel="noopener noreferrer">
-                Join Us
-              </a>
-            </Button>
+            {user ? (
+              <>
+                <span className="text-sm text-muted-foreground max-w-[160px] truncate">{user.email}</span>
+                <Button variant="heroOutline" size="sm" onClick={handleSignOut}>
+                  <LogOut className="w-4 h-4 mr-2" />
+                  Sign Out
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button variant="ghost" size="sm" onClick={() => navigate("/auth")}>
+                  Sign In
+                </Button>
+                <Button variant="hero" size="sm" onClick={() => navigate("/auth?mode=signup")}>
+                  Join Us
+                </Button>
+              </>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -103,11 +121,30 @@ const Navbar = () => {
                   {link.name}
                 </button>)}
               <div className="flex flex-col gap-2 pt-4">
-                <Button variant="hero" className="w-full" asChild>
-                  <a href={DISCORD_URL} target="_blank" rel="noopener noreferrer" onClick={() => setIsOpen(false)}>
-                    Join Us
-                  </a>
-                </Button>
+                {user ? (
+                  <>
+                    <span className="text-sm text-muted-foreground px-2 truncate">{user.email}</span>
+                    <Button variant="heroOutline" className="w-full" onClick={handleSignOut}>
+                      <LogOut className="w-4 h-4 mr-2" />
+                      Sign Out
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button variant="ghost" className="w-full" onClick={() => {
+                      navigate("/auth");
+                      setIsOpen(false);
+                    }}>
+                      Sign In
+                    </Button>
+                    <Button variant="hero" className="w-full" onClick={() => {
+                      navigate("/auth?mode=signup");
+                      setIsOpen(false);
+                    }}>
+                      Join Us
+                    </Button>
+                  </>
+                )}
               </div>
             </div>
           </div>}
