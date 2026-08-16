@@ -6,7 +6,7 @@ const Footer = () => {
   const location = useLocation();
 
   const links = {
-    Community: ["Group Flights", "Discord Server"],
+    Community: ["Group Flights", "Events Calendar", "Discord Server"],
     Resources: ["Knowledge Base", "Tutorials", "Flight Planning", "Route Database"],
     Support: ["FAQ", "Contact Us", "Guidelines"],
   };
@@ -67,6 +67,14 @@ const Footer = () => {
                       >
                         {item}
                       </button>
+                    ) : item === "Events Calendar" ? (
+                      <Link
+                        to="/events"
+                        onClick={() => setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 50)}
+                        className="text-muted-foreground hover:text-primary transition-colors text-sm"
+                      >
+                        {item}
+                      </Link>
                     ) : (
                       <a
                         href={item === "Discord Server" ? "https://discord.gg/Qs7cvhNngZ" : "#"}

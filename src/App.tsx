@@ -8,6 +8,7 @@ import TermsOfService from "./pages/TermsOfService";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import FAQ from "./pages/FAQ";
 import Auth from "./pages/Auth";
+import EventsCalendar from "./pages/EventsCalendar";
 import NotFound from "./pages/NotFound";
 
 const App = () => (
@@ -22,6 +23,7 @@ const App = () => (
           <Route path="/privacy" element={<PrivacyPolicy />} />
           <Route path="/faq" element={<FAQ />} />
           <Route path="/auth" element={<Auth />} />
+          <Route path="/events" element={<EventsCalendar />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
