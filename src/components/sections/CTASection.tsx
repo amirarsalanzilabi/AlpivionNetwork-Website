@@ -1,11 +1,9 @@
-import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Plane } from "lucide-react";
-import { useAuth } from "@/contexts/AuthContext";
-const CTASection = () => {
-  const { user } = useAuth();
-  const navigate = useNavigate();
 
+const DISCORD_URL = "https://discord.gg/Qs7cvhNngZ";
+
+const CTASection = () => {
   return (
     <section id="community" className="py-24 relative overflow-hidden">
       {/* Background decoration */}
@@ -31,17 +29,12 @@ const CTASection = () => {
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            {user ? (
-              <Button variant="hero" size="xl" onClick={() => navigate("/dashboard")}>
-                View Dashboard
-                <ArrowRight className="w-5 h-5" />
-              </Button>
-            ) : (
-              <Button variant="hero" size="xl" onClick={() => navigate("/auth?mode=signup")}>
+            <Button variant="hero" size="xl" asChild>
+              <a href={DISCORD_URL} target="_blank" rel="noopener noreferrer">
                 Create Account
                 <ArrowRight className="w-5 h-5" />
-              </Button>
-            )}
+              </a>
+            </Button>
             <Button
               variant="heroOutline"
               size="xl"

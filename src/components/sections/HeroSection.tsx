@@ -1,9 +1,10 @@
-import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Users, Calendar, BookOpen } from "lucide-react";
 import heroImage from "@/assets/hero-cockpit.jpg";
+
+const DISCORD_URL = "https://discord.gg/Qs7cvhNngZ";
+
 const HeroSection = () => {
-  const navigate = useNavigate();
   return <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
       {/* Background Image with Overlay */}
       <div className="absolute inset-0">
@@ -38,9 +39,11 @@ const HeroSection = () => {
           <div className="flex flex-col sm:flex-row gap-4 animate-fade-up" style={{
           animationDelay: "0.3s"
         }}>
-            <Button variant="hero" size="xl" onClick={() => navigate("/auth?mode=signup")}>
-              Join Alpivion Network
-              <ArrowRight className="w-5 h-5" />
+            <Button variant="hero" size="xl" asChild>
+              <a href={DISCORD_URL} target="_blank" rel="noopener noreferrer">
+                Join Alpivion Network
+                <ArrowRight className="w-5 h-5" />
+              </a>
             </Button>
             <Button variant="heroOutline" size="xl" onClick={() => document.getElementById("flights")?.scrollIntoView({
             behavior: "smooth"

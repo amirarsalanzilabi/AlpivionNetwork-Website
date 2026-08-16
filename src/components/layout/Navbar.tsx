@@ -1,20 +1,15 @@
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, X, Plane, LogOut, User } from "lucide-react";
-import { useAuth } from "@/contexts/AuthContext";
+import { Menu, X, Plane } from "lucide-react";
+
+const DISCORD_URL = "https://discord.gg/Qs7cvhNngZ";
+
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const {
-    user,
-    signOut
-  } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const handleSignOut = async () => {
-    await signOut();
-    setIsOpen(false);
-  };
+
   const handleNavClick = (href: string) => {
     setIsOpen(false);
     if (location.pathname !== "/") {
@@ -48,9 +43,7 @@ const Navbar = () => {
   }];
 
   const pageLinks = [
-    { name: "Forums", path: "/forums" },
     { name: "FAQ", path: "/faq" },
-    { name: "Report Issue", path: "/report-issue" },
   ];
 
   const handlePageClick = (path: string) => {
@@ -62,11 +55,11 @@ const Navbar = () => {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <button 
+          <button
             onClick={() => {
               navigate("/");
               window.scrollTo({ top: 0, behavior: "smooth" });
-            }} 
+            }}
             className="flex items-center gap-2 hover:opacity-80 transition-opacity"
           >
             <div className="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center glow-amber">
@@ -87,23 +80,11 @@ const Navbar = () => {
 
           {/* CTA Button */}
           <div className="hidden md:flex items-center gap-4">
-            {user ? <>
-                <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard")}>
-                  <User className="w-4 h-4 mr-2" />
-                  Dashboard
-                </Button>
-                <Button variant="heroOutline" size="sm" onClick={handleSignOut}>
-                  <LogOut className="w-4 h-4 mr-2" />
-                  Sign Out
-                </Button>
-              </> : <>
-                <Button variant="ghost" size="sm" onClick={() => navigate("/auth")}>
-                  Sign In
-                </Button>
-                <Button variant="hero" size="sm" onClick={() => navigate("/auth?mode=signup")}>
-                  Join Us
-                </Button>
-              </>}
+            <Button variant="hero" size="sm" asChild>
+              <a href={DISCORD_URL} target="_blank" rel="noopener noreferrer">
+                Join Us
+              </a>
+            </Button>
           </div>
 
           {/* Mobile Menu Button */}
@@ -122,32 +103,11 @@ const Navbar = () => {
                   {link.name}
                 </button>)}
               <div className="flex flex-col gap-2 pt-4">
-                {user ? <>
-                    <Button variant="ghost" className="w-full" onClick={() => {
-                navigate("/dashboard");
-                setIsOpen(false);
-              }}>
-                      <User className="w-4 h-4 mr-2" />
-                      Dashboard
-                    </Button>
-                    <Button variant="heroOutline" className="w-full" onClick={handleSignOut}>
-                      <LogOut className="w-4 h-4 mr-2" />
-                      Sign Out
-                    </Button>
-                  </> : <>
-                    <Button variant="ghost" className="w-full" onClick={() => {
-                navigate("/auth");
-                setIsOpen(false);
-              }}>
-                      Sign In
-                    </Button>
-                    <Button variant="hero" className="w-full" onClick={() => {
-                navigate("/auth?mode=signup");
-                setIsOpen(false);
-              }}>
-                      Join Us
-                    </Button>
-                  </>}
+                <Button variant="hero" className="w-full" asChild>
+                  <a href={DISCORD_URL} target="_blank" rel="noopener noreferrer" onClick={() => setIsOpen(false)}>
+                    Join Us
+                  </a>
+                </Button>
               </div>
             </div>
           </div>}
