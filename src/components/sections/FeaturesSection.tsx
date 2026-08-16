@@ -14,7 +14,7 @@ const features = [
   {
     icon: Radio,
     title: "Train with ATC",
-    description: "Practice realistic radio communications with our FAA trained Air Traffic Controllers.",
+    description: "Practice realistic radio communications with our trained air traffic controllers.",
   },
   {
     icon: Video,
