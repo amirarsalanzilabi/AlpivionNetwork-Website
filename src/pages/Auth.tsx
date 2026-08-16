@@ -19,6 +19,7 @@ const Auth = () => {
 
   const [signInEmail, setSignInEmail] = useState("");
   const [signInPassword, setSignInPassword] = useState("");
+  const [signUpUsername, setSignUpUsername] = useState("");
   const [signUpEmail, setSignUpEmail] = useState("");
   const [signUpPassword, setSignUpPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -61,13 +62,14 @@ const Auth = () => {
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    const { error } = await signUp(signUpEmail, signUpPassword);
+    const { error } = await signUp(signUpEmail, signUpPassword, signUpUsername);
     setLoading(false);
 
     if (error) {
+      const isTaken = /duplicate key|already exists/i.test(error.message);
       toast({
         title: "Sign up failed",
-        description: error.message,
+        description: isTaken ? "That username is already taken." : error.message,
         variant: "destructive",
       });
     } else {
@@ -144,6 +146,21 @@ const Auth = () => {
 
                   <TabsContent value="signup" className="mt-0">
                     <form onSubmit={handleSignUp} className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="signup-username">Username</Label>
+                        <Input
+                          id="signup-username"
+                          type="text"
+                          required
+                          minLength={3}
+                          maxLength={20}
+                          pattern="[A-Za-z0-9_]+"
+                          title="3-20 characters: letters, numbers, and underscores only"
+                          value={signUpUsername}
+                          onChange={(e) => setSignUpUsername(e.target.value)}
+                          placeholder="skypilot42"
+                        />
+                      </div>
                       <div className="space-y-2">
                         <Label htmlFor="signup-email">Email</Label>
                         <Input

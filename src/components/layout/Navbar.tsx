@@ -9,6 +9,7 @@ const Navbar = () => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const displayName = user?.user_metadata?.username ?? user?.email;
 
   const handleSignOut = async () => {
     await signOut();
@@ -87,7 +88,7 @@ const Navbar = () => {
           <div className="hidden md:flex items-center gap-4">
             {user ? (
               <>
-                <span className="text-sm text-muted-foreground max-w-[160px] truncate">{user.email}</span>
+                <span className="text-sm text-muted-foreground max-w-[160px] truncate">{displayName}</span>
                 <Button variant="heroOutline" size="sm" onClick={handleSignOut}>
                   <LogOut className="w-4 h-4 mr-2" />
                   Sign Out
@@ -123,7 +124,7 @@ const Navbar = () => {
               <div className="flex flex-col gap-2 pt-4">
                 {user ? (
                   <>
-                    <span className="text-sm text-muted-foreground px-2 truncate">{user.email}</span>
+                    <span className="text-sm text-muted-foreground px-2 truncate">{displayName}</span>
                     <Button variant="heroOutline" className="w-full" onClick={handleSignOut}>
                       <LogOut className="w-4 h-4 mr-2" />
                       Sign Out
