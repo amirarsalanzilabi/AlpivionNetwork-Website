@@ -3,6 +3,8 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
   AlertDialog,
@@ -15,7 +17,8 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { ArrowLeft, Loader2, Trash2 } from "lucide-react";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ArrowLeft, Loader2, Pencil, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
@@ -26,6 +29,7 @@ interface Thread {
   title: string;
   body: string;
   created_at: string;
+  edited_at: string | null;
   profiles: { username: string } | null;
 }
 
@@ -53,6 +57,10 @@ const ThreadDetail = () => {
   const [submitting, setSubmitting] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [deletingThread, setDeletingThread] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editTitle, setEditTitle] = useState("");
+  const [editBody, setEditBody] = useState("");
+  const [editSubmitting, setEditSubmitting] = useState(false);
 
   const fetchThread = useCallback(async () => {
     if (!id) return;
@@ -98,6 +106,34 @@ const ThreadDetail = () => {
       toast({ title: "Couldn't delete reply", description: error.message, variant: "destructive" });
     } else {
       setReplies((prev) => prev.filter((r) => r.id !== replyId));
+    }
+  };
+
+  const openEditDialog = () => {
+    if (!thread) return;
+    setEditTitle(thread.title);
+    setEditBody(thread.body);
+    setEditDialogOpen(true);
+  };
+
+  const handleEditThread = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!id) return;
+
+    setEditSubmitting(true);
+    const { data, error } = await supabase
+      .from("forum_threads")
+      .update({ title: editTitle, body: editBody, edited_at: new Date().toISOString() })
+      .eq("id", id)
+      .select("*, profiles(username)")
+      .single();
+    setEditSubmitting(false);
+
+    if (error) {
+      toast({ title: "Couldn't save changes", description: error.message, variant: "destructive" });
+    } else {
+      setThread(data as Thread);
+      setEditDialogOpen(false);
     }
   };
 
@@ -155,35 +191,84 @@ const ThreadDetail = () => {
             <div className="flex items-start justify-between gap-4">
               <h1 className="font-display text-2xl md:text-3xl font-bold text-foreground mb-2">{thread.title}</h1>
               {user?.id === thread.user_id && (
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <button
-                      className="text-muted-foreground hover:text-destructive transition-colors shrink-0 mt-1"
-                      disabled={deletingThread}
-                      aria-label="Delete thread"
-                    >
-                      {deletingThread ? <Loader2 className="w-5 h-5 animate-spin" /> : <Trash2 className="w-5 h-5" />}
-                    </button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Delete this thread?</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        This deletes the thread and all of its replies. This can't be undone.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction onClick={handleDeleteThread}>Delete</AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
+                <div className="flex items-center gap-3 shrink-0 mt-1">
+                  <button
+                    className="text-muted-foreground hover:text-primary transition-colors"
+                    onClick={openEditDialog}
+                    aria-label="Edit thread"
+                  >
+                    <Pencil className="w-5 h-5" />
+                  </button>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <button
+                        className="text-muted-foreground hover:text-destructive transition-colors"
+                        disabled={deletingThread}
+                        aria-label="Delete thread"
+                      >
+                        {deletingThread ? <Loader2 className="w-5 h-5 animate-spin" /> : <Trash2 className="w-5 h-5" />}
+                      </button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Delete this thread?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This deletes the thread and all of its replies. This can't be undone.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleDeleteThread}>Delete</AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
               )}
             </div>
             <p className="text-sm text-muted-foreground mb-4">
               {thread.profiles?.username ?? "Unknown"} · {formatDateTime(thread.created_at)}
+              {thread.edited_at && <span className="italic"> · Edited</span>}
             </p>
             <p className="text-foreground whitespace-pre-wrap">{thread.body}</p>
+
+            <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Edit thread</DialogTitle>
+                </DialogHeader>
+                <form onSubmit={handleEditThread} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-title">Title</Label>
+                    <Input
+                      id="edit-title"
+                      required
+                      minLength={3}
+                      maxLength={150}
+                      value={editTitle}
+                      onChange={(e) => setEditTitle(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-body">Message</Label>
+                    <Textarea
+                      id="edit-body"
+                      required
+                      minLength={1}
+                      maxLength={5000}
+                      rows={6}
+                      value={editBody}
+                      onChange={(e) => setEditBody(e.target.value)}
+                    />
+                  </div>
+                  <DialogFooter>
+                    <Button type="submit" variant="hero" disabled={editSubmitting}>
+                      {editSubmitting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+                      Save Changes
+                    </Button>
+                  </DialogFooter>
+                </form>
+              </DialogContent>
+            </Dialog>
           </div>
 
           <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4">
