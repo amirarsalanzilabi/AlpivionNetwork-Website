@@ -9,7 +9,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, Plane, MailCheck } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { useToast } from "@/hooks/use-toast";
 
 const Auth = () => {
   const [searchParams] = useSearchParams();
@@ -24,10 +23,11 @@ const Auth = () => {
   const [signUpPassword, setSignUpPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [signedUp, setSignedUp] = useState(false);
+  const [signInError, setSignInError] = useState<string | null>(null);
+  const [signUpError, setSignUpError] = useState<string | null>(null);
 
   const { user, signIn, signUp } = useAuth();
   const navigate = useNavigate();
-  const { toast } = useToast();
 
   useEffect(() => {
     document.title = "Sign In | Alpivion Network";
@@ -42,36 +42,30 @@ const Auth = () => {
   useEffect(() => {
     setTab(modeParam === "signup" ? "signup" : "signin");
     setSignedUp(false);
+    setSignInError(null);
+    setSignUpError(null);
   }, [modeParam]);
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSignInError(null);
     setLoading(true);
     const { error } = await signIn(signInEmail, signInPassword);
     setLoading(false);
 
-    if (error) {
-      toast({
-        title: "Sign in failed",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
+    if (error) setSignInError(error.message);
   };
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSignUpError(null);
     setLoading(true);
     const { error } = await signUp(signUpEmail, signUpPassword, signUpUsername);
     setLoading(false);
 
     if (error) {
       const isTaken = /duplicate key|already exists/i.test(error.message);
-      toast({
-        title: "Sign up failed",
-        description: isTaken ? "That username is already taken." : error.message,
-        variant: "destructive",
-      });
+      setSignUpError(isTaken ? "That username is already taken." : error.message);
     } else {
       setSignedUp(true);
     }
@@ -141,6 +135,7 @@ const Auth = () => {
                         {loading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
                         Sign In
                       </Button>
+                      {signInError && <p className="text-sm text-destructive">{signInError}</p>}
                     </form>
                   </TabsContent>
 
@@ -188,6 +183,7 @@ const Auth = () => {
                         {loading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
                         Create Account
                       </Button>
+                      {signUpError && <p className="text-sm text-destructive">{signUpError}</p>}
                     </form>
                   </TabsContent>
                 </CardContent>

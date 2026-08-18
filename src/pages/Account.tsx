@@ -2,15 +2,14 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, Camera } from "lucide-react";
+import { StatusButton } from "@/components/StatusButton";
+import { Loader2, Camera, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { useToast } from "@/hooks/use-toast";
+import { useInlineStatus } from "@/hooks/useInlineStatus";
 
 const ALLOWED_AVATAR_TYPES = ["image/jpeg", "image/png", "image/webp"];
 const MAX_AVATAR_BYTES = 5 * 1024 * 1024;
@@ -20,16 +19,17 @@ const formatDate = (dateStr: string) =>
 
 const Account = () => {
   const { user, profile, loading, refreshProfile } = useAuth();
-  const { toast } = useToast();
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const avatarStatus = useInlineStatus();
+  const emailStatus = useInlineStatus();
+  const passwordStatus = useInlineStatus();
+
   const [newEmail, setNewEmail] = useState("");
-  const [emailSubmitting, setEmailSubmitting] = useState(false);
+  const [emailSentTo, setEmailSentTo] = useState<string | null>(null);
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [passwordSubmitting, setPasswordSubmitting] = useState(false);
 
   useEffect(() => {
     document.title = "Account Settings | Alpivion Network";
@@ -47,26 +47,21 @@ const Account = () => {
     if (!file || !user) return;
 
     if (!ALLOWED_AVATAR_TYPES.includes(file.type)) {
-      toast({
-        title: "Unsupported file type",
-        description: "Profile pictures must be a JPEG, PNG, or WebP photo — GIFs and videos aren't allowed.",
-        variant: "destructive",
-      });
+      avatarStatus.fail("Must be a JPEG, PNG, or WebP photo — GIFs and videos aren't allowed.");
       return;
     }
     if (file.size > MAX_AVATAR_BYTES) {
-      toast({ title: "File too large", description: "Profile pictures must be under 5MB.", variant: "destructive" });
+      avatarStatus.fail("File must be under 5MB.");
       return;
     }
 
-    setUploadingAvatar(true);
+    avatarStatus.start();
     const ext = file.name.split(".").pop();
     const path = `${user.id}/avatar.${ext}`;
 
     const { error: uploadError } = await supabase.storage.from("avatars").upload(path, file, { upsert: true });
     if (uploadError) {
-      setUploadingAvatar(false);
-      toast({ title: "Upload failed", description: uploadError.message, variant: "destructive" });
+      avatarStatus.fail(uploadError.message);
       return;
     }
 
@@ -75,13 +70,12 @@ const Account = () => {
     const avatarUrl = `${publicUrlData.publicUrl}?t=${Date.now()}`;
 
     const { error: updateError } = await supabase.from("profiles").update({ avatar_url: avatarUrl }).eq("id", user.id);
-    setUploadingAvatar(false);
 
     if (updateError) {
-      toast({ title: "Couldn't save profile picture", description: updateError.message, variant: "destructive" });
+      avatarStatus.fail(updateError.message);
     } else {
       await refreshProfile();
-      toast({ title: "Profile picture updated" });
+      avatarStatus.succeed();
     }
   };
 
@@ -89,43 +83,38 @@ const Account = () => {
     e.preventDefault();
 
     if (newEmail.trim().toLowerCase() === user.email?.toLowerCase()) {
-      toast({
-        title: "That's already your email",
-        description: "Enter a different address to update it.",
-        variant: "destructive",
-      });
+      emailStatus.fail("That's already your email — enter a different address.");
       return;
     }
 
-    setEmailSubmitting(true);
+    emailStatus.start();
     const { error } = await supabase.auth.updateUser({ email: newEmail });
-    setEmailSubmitting(false);
 
     if (error) {
-      toast({ title: "Couldn't update email", description: error.message, variant: "destructive" });
+      emailStatus.fail(error.message);
     } else {
+      setEmailSentTo(newEmail);
       setNewEmail("");
-      toast({ title: "Confirmation sent", description: "Check your new email address to confirm the change." });
+      emailStatus.succeed();
     }
   };
 
   const handleUpdatePassword = async (e: React.FormEvent) => {
     e.preventDefault();
     if (newPassword !== confirmPassword) {
-      toast({ title: "Passwords don't match", variant: "destructive" });
+      passwordStatus.fail("Passwords don't match.");
       return;
     }
 
-    setPasswordSubmitting(true);
+    passwordStatus.start();
     const { error } = await supabase.auth.updateUser({ password: newPassword });
-    setPasswordSubmitting(false);
 
     if (error) {
-      toast({ title: "Couldn't update password", description: error.message, variant: "destructive" });
+      passwordStatus.fail(error.message);
     } else {
       setNewPassword("");
       setConfirmPassword("");
-      toast({ title: "Password updated" });
+      passwordStatus.succeed();
     }
   };
 
@@ -167,11 +156,17 @@ const Account = () => {
                 </Avatar>
                 <button
                   onClick={handleAvatarClick}
-                  disabled={uploadingAvatar}
-                  className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center hover:opacity-90 transition-opacity"
+                  disabled={avatarStatus.status === "loading"}
+                  className={`absolute -bottom-1 -right-1 w-7 h-7 rounded-full flex items-center justify-center transition-colors ${
+                    avatarStatus.status === "success"
+                      ? "bg-emerald-500 text-white"
+                      : "bg-primary text-primary-foreground hover:opacity-90"
+                  }`}
                   aria-label="Change profile picture"
                 >
-                  {uploadingAvatar ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Camera className="w-3.5 h-3.5" />}
+                  {avatarStatus.status === "loading" && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                  {avatarStatus.status === "success" && <Check className="w-3.5 h-3.5" />}
+                  {(avatarStatus.status === "idle" || avatarStatus.status === "error") && <Camera className="w-3.5 h-3.5" />}
                 </button>
                 <input
                   ref={fileInputRef}
@@ -187,6 +182,9 @@ const Account = () => {
                   Joined {profile ? formatDate(profile.created_at) : "—"}
                 </p>
                 <p className="text-xs text-muted-foreground mt-1">JPEG, PNG, or WebP · up to 5MB</p>
+                {avatarStatus.status === "error" && (
+                  <p className="text-xs text-destructive mt-1">{avatarStatus.error}</p>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -207,11 +205,22 @@ const Account = () => {
                   placeholder="new@email.com"
                   className="flex-1"
                 />
-                <Button type="submit" variant="heroOutline" disabled={emailSubmitting}>
-                  {emailSubmitting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
-                  Update Email
-                </Button>
+                <StatusButton
+                  type="submit"
+                  variant="heroOutline"
+                  status={emailStatus.status}
+                  idleLabel="Update Email"
+                  successLabel="Sent"
+                />
               </form>
+              {emailStatus.status === "error" && (
+                <p className="text-sm text-destructive mt-2">{emailStatus.error}</p>
+              )}
+              {emailStatus.status === "success" && (
+                <p className="text-sm text-muted-foreground mt-2">
+                  Check <span className="text-foreground">{emailSentTo}</span> to confirm the change.
+                </p>
+              )}
             </CardContent>
           </Card>
 
@@ -241,10 +250,16 @@ const Account = () => {
                     placeholder="Confirm new password"
                   />
                 </div>
-                <Button type="submit" variant="heroOutline" disabled={passwordSubmitting}>
-                  {passwordSubmitting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
-                  Update Password
-                </Button>
+                <StatusButton
+                  type="submit"
+                  variant="heroOutline"
+                  status={passwordStatus.status}
+                  idleLabel="Update Password"
+                  successLabel="Updated"
+                />
+                {passwordStatus.status === "error" && (
+                  <p className="text-sm text-destructive">{passwordStatus.error}</p>
+                )}
               </form>
             </CardContent>
           </Card>

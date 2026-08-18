@@ -21,7 +21,6 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { ArrowLeft, Loader2, Pencil, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { useToast } from "@/hooks/use-toast";
 
 interface Thread {
   id: string;
@@ -47,7 +46,6 @@ const formatDateTime = (dateStr: string) =>
 const ThreadDetail = () => {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
-  const { toast } = useToast();
   const navigate = useNavigate();
 
   const [thread, setThread] = useState<Thread | null>(null);
@@ -55,12 +53,16 @@ const ThreadDetail = () => {
   const [loading, setLoading] = useState(true);
   const [replyBody, setReplyBody] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [replyError, setReplyError] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [deleteReplyError, setDeleteReplyError] = useState<{ id: string; message: string } | null>(null);
   const [deletingThread, setDeletingThread] = useState(false);
+  const [deleteThreadError, setDeleteThreadError] = useState<string | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editTitle, setEditTitle] = useState("");
   const [editBody, setEditBody] = useState("");
   const [editSubmitting, setEditSubmitting] = useState(false);
+  const [editError, setEditError] = useState<string | null>(null);
 
   const fetchThread = useCallback(async () => {
     if (!id) return;
@@ -85,12 +87,13 @@ const ThreadDetail = () => {
     e.preventDefault();
     if (!user || !id) return;
 
+    setReplyError(null);
     setSubmitting(true);
     const { error } = await supabase.from("forum_replies").insert({ thread_id: id, user_id: user.id, body: replyBody });
     setSubmitting(false);
 
     if (error) {
-      toast({ title: "Couldn't post reply", description: error.message, variant: "destructive" });
+      setReplyError(error.message);
     } else {
       setReplyBody("");
       fetchThread();
@@ -98,12 +101,13 @@ const ThreadDetail = () => {
   };
 
   const handleDeleteReply = async (replyId: string) => {
+    setDeleteReplyError(null);
     setDeletingId(replyId);
     const { error } = await supabase.from("forum_replies").delete().eq("id", replyId);
     setDeletingId(null);
 
     if (error) {
-      toast({ title: "Couldn't delete reply", description: error.message, variant: "destructive" });
+      setDeleteReplyError({ id: replyId, message: error.message });
     } else {
       setReplies((prev) => prev.filter((r) => r.id !== replyId));
     }
@@ -113,6 +117,7 @@ const ThreadDetail = () => {
     if (!thread) return;
     setEditTitle(thread.title);
     setEditBody(thread.body);
+    setEditError(null);
     setEditDialogOpen(true);
   };
 
@@ -120,6 +125,7 @@ const ThreadDetail = () => {
     e.preventDefault();
     if (!id) return;
 
+    setEditError(null);
     setEditSubmitting(true);
     const { data, error } = await supabase
       .from("forum_threads")
@@ -130,7 +136,7 @@ const ThreadDetail = () => {
     setEditSubmitting(false);
 
     if (error) {
-      toast({ title: "Couldn't save changes", description: error.message, variant: "destructive" });
+      setEditError(error.message);
     } else {
       setThread(data as Thread);
       setEditDialogOpen(false);
@@ -139,12 +145,13 @@ const ThreadDetail = () => {
 
   const handleDeleteThread = async () => {
     if (!id) return;
+    setDeleteThreadError(null);
     setDeletingThread(true);
     const { error } = await supabase.from("forum_threads").delete().eq("id", id);
     setDeletingThread(false);
 
     if (error) {
-      toast({ title: "Couldn't delete thread", description: error.message, variant: "destructive" });
+      setDeleteThreadError(error.message);
     } else {
       navigate("/forums");
     }
@@ -230,6 +237,7 @@ const ThreadDetail = () => {
               {thread.edited_at && <span className="italic"> · Edited</span>}
             </p>
             <p className="text-foreground whitespace-pre-wrap">{thread.body}</p>
+            {deleteThreadError && <p className="text-sm text-destructive mt-3">{deleteThreadError}</p>}
 
             <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
               <DialogContent>
@@ -260,6 +268,7 @@ const ThreadDetail = () => {
                       onChange={(e) => setEditBody(e.target.value)}
                     />
                   </div>
+                  {editError && <p className="text-sm text-destructive">{editError}</p>}
                   <DialogFooter>
                     <Button type="submit" variant="hero" disabled={editSubmitting}>
                       {editSubmitting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
@@ -311,6 +320,9 @@ const ThreadDetail = () => {
                   )}
                 </div>
                 <p className="text-foreground whitespace-pre-wrap">{reply.body}</p>
+                {deleteReplyError?.id === reply.id && (
+                  <p className="text-sm text-destructive mt-2">{deleteReplyError.message}</p>
+                )}
               </div>
             ))}
           </div>
@@ -330,6 +342,7 @@ const ThreadDetail = () => {
                 {submitting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
                 Post Reply
               </Button>
+              {replyError && <p className="text-sm text-destructive">{replyError}</p>}
             </form>
           ) : (
             <div className="glass-card rounded-xl p-6 text-center">

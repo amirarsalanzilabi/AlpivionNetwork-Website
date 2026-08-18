@@ -16,7 +16,6 @@ import {
 import { MessageSquare, Loader2, Plus, Clock } from "lucide-react";
 import { useForumThreads } from "@/hooks/useForumThreads";
 import { useAuth } from "@/contexts/AuthContext";
-import { useToast } from "@/hooks/use-toast";
 
 const formatRelativeTime = (dateStr: string) => {
   const diffMs = Date.now() - new Date(dateStr).getTime();
@@ -40,13 +39,13 @@ const Forums = () => {
   const { threads, loading, createThread, dailyLimitReached, nextAllowedAt, threadsUsedToday, dailyLimit } =
     useForumThreads();
   const { user } = useAuth();
-  const { toast } = useToast();
   const navigate = useNavigate();
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const [now, setNow] = useState(Date.now());
 
   useEffect(() => {
@@ -68,17 +67,19 @@ const Forums = () => {
       navigate("/auth");
       return;
     }
+    setSubmitError(null);
     setDialogOpen(true);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSubmitError(null);
     setSubmitting(true);
     const { error } = await createThread(title, body);
     setSubmitting(false);
 
     if (error) {
-      toast({ title: "Couldn't create thread", description: error.message, variant: "destructive" });
+      setSubmitError(error.message);
     } else {
       setTitle("");
       setBody("");
@@ -132,6 +133,7 @@ const Forums = () => {
                       placeholder="Share the details..."
                     />
                   </div>
+                  {submitError && <p className="text-sm text-destructive">{submitError}</p>}
                   <DialogFooter>
                     <Button type="submit" variant="hero" disabled={submitting}>
                       {submitting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
