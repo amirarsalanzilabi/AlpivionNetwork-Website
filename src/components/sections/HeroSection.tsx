@@ -63,8 +63,8 @@ const HeroSection = () => {
                 <Calendar className="w-6 h-6 text-primary" />
               </div>
               <div>
-                <div className="text-2xl font-bold font-display text-foreground">50+</div>
-                <div className="text-sm text-muted-foreground">Monthly Flights</div>
+                <div className="text-2xl font-bold font-display text-foreground">Active</div>
+                <div className="text-sm text-muted-foreground">Group Flights</div>
               </div>
             </div>
             <div className="flex items-center gap-3">
@@ -72,7 +72,7 @@ const HeroSection = () => {
                 <BookOpen className="w-6 h-6 text-primary" />
               </div>
               <div>
-                <div className="text-2xl font-bold font-display text-foreground">50+</div>
+                <div className="text-2xl font-bold font-display text-foreground">Expanding</div>
                 <div className="text-sm text-muted-foreground">Guides</div>
               </div>
             </div>
