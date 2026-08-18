@@ -10,7 +10,6 @@ import ResetPassword from "./pages/ResetPassword";
 import Account from "./pages/Account";
 import Forums from "./pages/Forums";
 import ThreadDetail from "./pages/ThreadDetail";
-import News from "./pages/News";
 import NotFound from "./pages/NotFound";
 
 const App = () => (
@@ -27,7 +26,6 @@ const App = () => (
           <Route path="/account" element={<Account />} />
           <Route path="/forums" element={<Forums />} />
           <Route path="/forums/:id" element={<ThreadDetail />} />
-          <Route path="/news" element={<News />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
