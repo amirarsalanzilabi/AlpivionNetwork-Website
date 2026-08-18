@@ -7,8 +7,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { StatusButton } from "@/components/StatusButton";
 import { Loader2, Plane, MailCheck } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useInlineStatus } from "@/hooks/useInlineStatus";
+import { supabase } from "@/integrations/supabase/client";
 
 const Auth = () => {
   const [searchParams] = useSearchParams();
@@ -25,6 +28,10 @@ const Auth = () => {
   const [signedUp, setSignedUp] = useState(false);
   const [signInError, setSignInError] = useState<string | null>(null);
   const [signUpError, setSignUpError] = useState<string | null>(null);
+
+  const [showForgot, setShowForgot] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState("");
+  const forgotStatus = useInlineStatus();
 
   const { user, signIn, signUp } = useAuth();
   const navigate = useNavigate();
@@ -44,6 +51,7 @@ const Auth = () => {
     setSignedUp(false);
     setSignInError(null);
     setSignUpError(null);
+    setShowForgot(false);
   }, [modeParam]);
 
   const handleSignIn = async (e: React.FormEvent) => {
@@ -71,6 +79,25 @@ const Auth = () => {
     }
   };
 
+  const openForgotPassword = () => {
+    setForgotEmail(signInEmail);
+    setShowForgot(true);
+  };
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    forgotStatus.start();
+    const { error } = await supabase.auth.resetPasswordForEmail(forgotEmail, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+
+    if (error) {
+      forgotStatus.fail(error.message);
+    } else {
+      forgotStatus.succeed();
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <Navbar />
@@ -84,7 +111,61 @@ const Auth = () => {
           </div>
 
           <Card className="glass-card border-border">
-            {signedUp ? (
+            {showForgot ? (
+              <CardContent className="pt-6 space-y-4">
+                {forgotStatus.status === "success" ? (
+                  <div className="text-center space-y-4">
+                    <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
+                      <MailCheck className="w-6 h-6 text-primary" />
+                    </div>
+                    <CardTitle className="text-xl">Check your email</CardTitle>
+                    <CardDescription>
+                      If an account exists for <span className="text-foreground">{forgotEmail}</span>, a password
+                      reset link is on its way.
+                    </CardDescription>
+                    <Button variant="heroOutline" className="w-full" onClick={() => setShowForgot(false)}>
+                      Back to Sign In
+                    </Button>
+                  </div>
+                ) : (
+                  <>
+                    <CardTitle className="text-xl">Reset your password</CardTitle>
+                    <CardDescription>We'll email you a link to choose a new one.</CardDescription>
+                    <form onSubmit={handleForgotPassword} className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="forgot-email">Email</Label>
+                        <Input
+                          id="forgot-email"
+                          type="email"
+                          required
+                          value={forgotEmail}
+                          onChange={(e) => setForgotEmail(e.target.value)}
+                          placeholder="you@example.com"
+                        />
+                      </div>
+                      <StatusButton
+                        type="submit"
+                        variant="hero"
+                        className="w-full"
+                        status={forgotStatus.status}
+                        idleLabel="Send Reset Link"
+                        successLabel="Sent"
+                      />
+                      {forgotStatus.status === "error" && (
+                        <p className="text-sm text-destructive">{forgotStatus.error}</p>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => setShowForgot(false)}
+                        className="text-sm text-muted-foreground hover:text-primary transition-colors block mx-auto"
+                      >
+                        Back to Sign In
+                      </button>
+                    </form>
+                  </>
+                )}
+              </CardContent>
+            ) : signedUp ? (
               <CardContent className="pt-6 text-center space-y-4">
                 <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
                   <MailCheck className="w-6 h-6 text-primary" />
@@ -121,7 +202,16 @@ const Auth = () => {
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="signin-password">Password</Label>
+                        <div className="flex items-center justify-between">
+                          <Label htmlFor="signin-password">Password</Label>
+                          <button
+                            type="button"
+                            onClick={openForgotPassword}
+                            className="text-xs text-muted-foreground hover:text-primary transition-colors"
+                          >
+                            Forgot password?
+                          </button>
+                        </div>
                         <Input
                           id="signin-password"
                           type="password"
