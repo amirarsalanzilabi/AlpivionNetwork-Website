@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 const Footer = () => {
   const links = {
     Community: ["Forums", "Discord Server"],
-    Resources: ["Knowledge Base", "Tutorials", "Flight Planning", "Route Database"],
+    Resources: ["News", "Knowledge Base", "Tutorials", "Flight Planning", "Route Database"],
     Support: ["FAQ", "Contact Us", "Guidelines"],
   };
 
@@ -48,6 +48,14 @@ const Footer = () => {
                     ) : item === "Forums" ? (
                       <Link
                         to="/forums"
+                        onClick={() => setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 50)}
+                        className="text-muted-foreground hover:text-primary transition-colors text-sm"
+                      >
+                        {item}
+                      </Link>
+                    ) : item === "News" ? (
+                      <Link
+                        to="/news"
                         onClick={() => setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 50)}
                         className="text-muted-foreground hover:text-primary transition-colors text-sm"
                       >
