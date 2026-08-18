@@ -87,6 +87,16 @@ const Account = () => {
 
   const handleUpdateEmail = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (newEmail.trim().toLowerCase() === user.email?.toLowerCase()) {
+      toast({
+        title: "That's already your email",
+        description: "Enter a different address to update it.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setEmailSubmitting(true);
     const { error } = await supabase.auth.updateUser({ email: newEmail });
     setEmailSubmitting(false);
