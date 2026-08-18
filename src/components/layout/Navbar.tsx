@@ -46,6 +46,7 @@ const Navbar = () => {
   }];
 
   const pageLinks = [
+    { name: "Forums", path: "/forums" },
     { name: "FAQ", path: "/faq" },
   ];
 
