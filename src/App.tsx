@@ -8,6 +8,7 @@ import TermsOfService from "./pages/TermsOfService";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import FAQ from "./pages/FAQ";
 import Auth from "./pages/Auth";
+import Account from "./pages/Account";
 import Forums from "./pages/Forums";
 import ThreadDetail from "./pages/ThreadDetail";
 import NotFound from "./pages/NotFound";
@@ -24,6 +25,7 @@ const App = () => (
           <Route path="/privacy" element={<PrivacyPolicy />} />
           <Route path="/faq" element={<FAQ />} />
           <Route path="/auth" element={<Auth />} />
+          <Route path="/account" element={<Account />} />
           <Route path="/forums" element={<Forums />} />
           <Route path="/forums/:id" element={<ThreadDetail />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

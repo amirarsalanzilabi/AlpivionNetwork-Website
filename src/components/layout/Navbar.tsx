@@ -1,15 +1,24 @@
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, X, Plane, LogOut } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Menu, X, Plane, LogOut, Settings } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const { user, signOut } = useAuth();
+  const { user, profile, signOut } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const displayName = user?.user_metadata?.username ?? user?.email;
+  const displayName = profile?.username ?? user?.email;
+  const initial = displayName?.charAt(0).toUpperCase();
 
   const handleSignOut = async () => {
     await signOut();
@@ -85,13 +94,26 @@ const Navbar = () => {
           {/* CTA Button */}
           <div className="hidden md:flex items-center gap-4">
             {user ? (
-              <>
-                <span className="text-sm text-muted-foreground max-w-[160px] truncate">{displayName}</span>
-                <Button variant="heroOutline" size="sm" onClick={handleSignOut}>
-                  <LogOut className="w-4 h-4 mr-2" />
-                  Sign Out
-                </Button>
-              </>
+              <DropdownMenu>
+                <DropdownMenuTrigger className="flex items-center gap-2 hover:opacity-80 transition-opacity outline-none">
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage src={profile?.avatar_url ?? undefined} alt={displayName} />
+                    <AvatarFallback className="bg-primary/20 text-primary text-sm">{initial}</AvatarFallback>
+                  </Avatar>
+                  <span className="text-sm text-foreground max-w-[140px] truncate">{displayName}</span>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem onClick={() => navigate("/account")}>
+                    <Settings className="w-4 h-4 mr-2" />
+                    Account Settings
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleSignOut}>
+                    <LogOut className="w-4 h-4 mr-2" />
+                    Sign Out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             ) : (
               <>
                 <Button variant="ghost" size="sm" onClick={() => navigate("/auth")}>
@@ -122,7 +144,20 @@ const Navbar = () => {
               <div className="flex flex-col gap-2 pt-4">
                 {user ? (
                   <>
-                    <span className="text-sm text-muted-foreground px-2 truncate">{displayName}</span>
+                    <button
+                      onClick={() => { navigate("/account"); setIsOpen(false); }}
+                      className="flex items-center gap-3 px-2 py-1 text-left hover:opacity-80 transition-opacity"
+                    >
+                      <Avatar className="h-8 w-8">
+                        <AvatarImage src={profile?.avatar_url ?? undefined} alt={displayName} />
+                        <AvatarFallback className="bg-primary/20 text-primary text-sm">{initial}</AvatarFallback>
+                      </Avatar>
+                      <span className="text-sm text-foreground truncate">{displayName}</span>
+                    </button>
+                    <Button variant="ghost" className="w-full justify-start" onClick={() => { navigate("/account"); setIsOpen(false); }}>
+                      <Settings className="w-4 h-4 mr-2" />
+                      Account Settings
+                    </Button>
                     <Button variant="heroOutline" className="w-full" onClick={handleSignOut}>
                       <LogOut className="w-4 h-4 mr-2" />
                       Sign Out
