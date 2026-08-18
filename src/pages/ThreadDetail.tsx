@@ -22,6 +22,7 @@ import { useToast } from "@/hooks/use-toast";
 
 interface Thread {
   id: string;
+  user_id: string;
   title: string;
   body: string;
   created_at: string;
@@ -51,6 +52,7 @@ const ThreadDetail = () => {
   const [replyBody, setReplyBody] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [deletingThread, setDeletingThread] = useState(false);
 
   const fetchThread = useCallback(async () => {
     if (!id) return;
@@ -99,6 +101,19 @@ const ThreadDetail = () => {
     }
   };
 
+  const handleDeleteThread = async () => {
+    if (!id) return;
+    setDeletingThread(true);
+    const { error } = await supabase.from("forum_threads").delete().eq("id", id);
+    setDeletingThread(false);
+
+    if (error) {
+      toast({ title: "Couldn't delete thread", description: error.message, variant: "destructive" });
+    } else {
+      navigate("/forums");
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background">
@@ -137,7 +152,34 @@ const ThreadDetail = () => {
           </Link>
 
           <div className="glass-card rounded-xl p-6 mb-6">
-            <h1 className="font-display text-2xl md:text-3xl font-bold text-foreground mb-2">{thread.title}</h1>
+            <div className="flex items-start justify-between gap-4">
+              <h1 className="font-display text-2xl md:text-3xl font-bold text-foreground mb-2">{thread.title}</h1>
+              {user?.id === thread.user_id && (
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <button
+                      className="text-muted-foreground hover:text-destructive transition-colors shrink-0 mt-1"
+                      disabled={deletingThread}
+                      aria-label="Delete thread"
+                    >
+                      {deletingThread ? <Loader2 className="w-5 h-5 animate-spin" /> : <Trash2 className="w-5 h-5" />}
+                    </button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Delete this thread?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This deletes the thread and all of its replies. This can't be undone.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={handleDeleteThread}>Delete</AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              )}
+            </div>
             <p className="text-sm text-muted-foreground mb-4">
               {thread.profiles?.username ?? "Unknown"} · {formatDateTime(thread.created_at)}
             </p>
