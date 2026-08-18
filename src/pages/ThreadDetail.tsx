@@ -4,7 +4,18 @@ import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, Loader2 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { ArrowLeft, Loader2, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
@@ -19,6 +30,7 @@ interface Thread {
 
 interface Reply {
   id: string;
+  user_id: string;
   body: string;
   created_at: string;
   profiles: { username: string } | null;
@@ -38,6 +50,7 @@ const ThreadDetail = () => {
   const [loading, setLoading] = useState(true);
   const [replyBody, setReplyBody] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const fetchThread = useCallback(async () => {
     if (!id) return;
@@ -71,6 +84,18 @@ const ThreadDetail = () => {
     } else {
       setReplyBody("");
       fetchThread();
+    }
+  };
+
+  const handleDeleteReply = async (replyId: string) => {
+    setDeletingId(replyId);
+    const { error } = await supabase.from("forum_replies").delete().eq("id", replyId);
+    setDeletingId(null);
+
+    if (error) {
+      toast({ title: "Couldn't delete reply", description: error.message, variant: "destructive" });
+    } else {
+      setReplies((prev) => prev.filter((r) => r.id !== replyId));
     }
   };
 
@@ -126,9 +151,38 @@ const ThreadDetail = () => {
           <div className="space-y-3 mb-8">
             {replies.map((reply) => (
               <div key={reply.id} className="glass-card rounded-xl p-5">
-                <p className="text-sm text-muted-foreground mb-2">
-                  {reply.profiles?.username ?? "Unknown"} · {formatDateTime(reply.created_at)}
-                </p>
+                <div className="flex items-start justify-between gap-4">
+                  <p className="text-sm text-muted-foreground mb-2">
+                    {reply.profiles?.username ?? "Unknown"} · {formatDateTime(reply.created_at)}
+                  </p>
+                  {user?.id === reply.user_id && (
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <button
+                          className="text-muted-foreground hover:text-destructive transition-colors shrink-0"
+                          disabled={deletingId === reply.id}
+                          aria-label="Delete reply"
+                        >
+                          {deletingId === reply.id ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <Trash2 className="w-4 h-4" />
+                          )}
+                        </button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Delete this reply?</AlertDialogTitle>
+                          <AlertDialogDescription>This can't be undone.</AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => handleDeleteReply(reply.id)}>Delete</AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  )}
+                </div>
                 <p className="text-foreground whitespace-pre-wrap">{reply.body}</p>
               </div>
             ))}
